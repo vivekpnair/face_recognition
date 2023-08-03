@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Face Authentication based attendance</title>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+      name="viewport"
+    />
+  </head>
+  <body>
+    <a href="/studreg_page">Register for Face Auth</a> &nbsp &nbsp | &nbsp &nbsp
+    <a href="/">Mark Attendance </a> &nbsp &nbsp | &nbsp &nbsp
+    <a href="/atten_report_page">Attendance report</a>
+
+    <h2>Welcome to Attendance marking system</h2>
+    <button id="start-camera">Mark Attendance</button> <br />
+    <video autoplay height="240" id="video" width="320"></video> <br />
+    <button id="click-photo" style="display: none">Take Photo</button> <br />
+    <input
+      id="std_id"
+      name="std_id"
+      placeholder="Enter Student ID"
+      style="display: none"
+      type="text"
+    /><br />
+    <button id="click-submit" style="display: none">Submit</button><br />
+    <label id="msg"></label><br />
+    <canvas height="240" id="canvas" width="320"></canvas>
+    <script>
+      let camera_button = document.querySelector("#start-camera");
+      let click_submit = document.querySelector("#click-submit");
+      let std_id_tbox = document.querySelector("#std_id");
+      let video = document.querySelector("#video");
+      let click_photo = document.querySelector("#click-photo");
+      let canvas = document.querySelector("#canvas");
+      let dataurl = null;
+      let msg_label = document.querySelector("#msg");
+
+      camera_button.addEventListener("click", async function () {
+        let stream = null;
+
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+        } catch (error) {
+          alert(error.message);
+          return;
+        }
+
+        video.srcObject = stream;
+
+        video.style.display = "block";
+        camera_button.style.display = "none";
+        std_id_tbox.style.display = "none";
+        msg_label.style.display = "none";
+        click_photo.style.display = "block";
+        click_submit.style.display = "none";
+      });
+
+      click_photo.addEventListener("click", function () {
+        canvas
+          .getContext("2d")
+          .drawImage(video, 0, 0, canvas.width, canvas.height);
+        let image_data_url = canvas.toDataURL("image/jpeg");
+
+        dataurl = image_data_url;
+        std_id_tbox.style.display = "block";
+
+        click_submit.style.display = "block";
+        msg_label.style.display = "none";
+      });
+
+      click_submit.addEventListener("click", function () {
+        const url = "http://127.0.0.1:5000/authuser";
+
+        fetch(url, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            imgb64: dataurl,
+            stdid: std_id_tbox.value,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            var msg = "";
+            if (data.result === 200) {
+              msg = "Face Auth Successfull!";
+            } else {
+              msg = "Face Auth failed. Try again !. Error : " + data.error;
+            }
+            msg_label.innerHTML = msg;
+            msg_label.style.display = "block";
+            console.log(data);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      });
+    </script>
+  </body>
+</html>

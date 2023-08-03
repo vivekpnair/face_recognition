@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Register USer for Face Auth</title>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+      name="viewport"
+    />
+  </head>
+  <body>
+    <a href="/studreg_page">Register for Face Auth</a> &nbsp &nbsp | &nbsp &nbsp
+    <a href="/">Mark Attendance </a> &nbsp &nbsp | &nbsp &nbsp
+    <a href="/atten_report_page">Attendance report</a>
+    <div id="stud_reg">
+      <h2>Register student for face auth</h2>
+      <br />
+      <input
+        id="std_name"
+        name="std_name"
+        placeholder="Student Name"
+        type="text"
+      />
+      <br />
+      <input
+        id="std_year"
+        name="std_year"
+        placeholder="Student Year"
+        type="text"
+      /><br />
+      <input
+        id="std_branch"
+        name="std_branch"
+        placeholder="Student Branch"
+        type="text"
+      /><br />
+      <input
+        id="std_sem"
+        name="std_sem"
+        placeholder="Student Sem"
+        type="text"
+      /><br />
+      <button id="click-photo" style="display: none">Take Photo</button> <br />
+      <button id="start-camera">Take Photo</button> <br />
+      <button id="click-submit">Submit</button><br /><br />
+      <label id="msg"></label><br />
+      <video autoplay height="240" id="video" width="320"></video> 
+      <canvas height="240" id="canvas" width="320"></canvas> <br>
+
+      
+    </div>
+    <script>
+      let camera_button = document.querySelector("#start-camera");
+      let click_photo = document.querySelector("#click-photo");
+
+      let click_submit = document.querySelector("#click-submit");
+      let std_name_tbox = document.querySelector("#std_name");
+      let std_year_tbox = document.querySelector("#std_year");
+      let std_branch_tbox = document.querySelector("#std_branch");
+      let std_sem_tbox = document.querySelector("#std_sem"); 
+      let msg_label = document.querySelector("#msg");
+      let dataurl = null;
+
+      camera_button.addEventListener("click", async function () {
+        let stream = null;
+
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+        } catch (error) {
+          alert(error.message);
+          return;
+        }
+
+        video.srcObject = stream;
+
+        video.style.display = "block";
+        camera_button.style.display = "none";
+        click_photo.style.display = "block";
+      });
+
+      click_photo.addEventListener("click", function () {
+        canvas
+          .getContext("2d")
+          .drawImage(video, 0, 0, canvas.width, canvas.height);
+        let image_data_url = canvas.toDataURL("image/jpeg");
+
+        dataurl = image_data_url;
+
+        click_submit.style.display = "block";
+        msg_label.style.display = "none";
+      });
+
+      click_submit.addEventListener("click", function () {
+        const url = "http://127.0.0.1:5000/studreg";
+
+        fetch(url, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            imgb64: dataurl,
+            std_name: std_name_tbox.value,
+            std_year: std_year_tbox.value,
+            std_branch: std_branch_tbox.value,
+            std_sem: std_sem_tbox.value,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            var msg = "";
+            if (data.result === 200) {
+              msg =
+                "Successfully registered user for Face Auth!. Student ID generated : " +
+                data.data +
+                " . Submit your passport size photo as .jpg file to admin office";
+            } else {
+              msg = "Reg result : " + data.result + ", Error : " + data.error;
+            }
+            msg_label.innerHTML = msg;
+            msg_label.style.display = "block";
+            console.log(data);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,2 @@
+usage of face_recog app
+
