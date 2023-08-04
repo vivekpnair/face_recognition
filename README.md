@@ -2,6 +2,8 @@
 
 this is a python flask app
 
-run the flask app and go the main page and follow the page links
+- it allows an institution to register and mark attendance of people using face recog technology
 
-note: the computer running this app should have a camera 
+
+how to run : run the flask app and go the main page and follow the page links
+
